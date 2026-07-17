@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="15" alignment="CENTER" prefWidth="400" prefHeight="450" style="-fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Login.LoginController">
+    <padding>
+        <Insets top="30" right="40" bottom="30" left="40"/>
+    </padding>
+    <children>
+        <HBox alignment="TOP_RIGHT">
+            <children>
+                <Button text="Dark Mode" onAction="#onDarkModeClicked" style="-fx-font-size: 11px;"/>
+            </children>
+        </HBox>
+
+        <Label text="Dormies" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+        <Label text="Sign in to your account" style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;"/>
+
+        <VBox spacing="10" alignment="CENTER_LEFT">
+            <children>
+                <Label text="Username" style="-fx-font-weight: bold; -fx-text-fill: #34495e;"/>
+                <TextField fx:id="tfUsername" promptText="Enter Username" style="-fx-padding: 8px;"/>
+
+                <Label text="Password" style="-fx-font-weight: bold; -fx-text-fill: #34495e;"/>
+                <PasswordField fx:id="pfPassword" promptText="Enter Password" onKeyPressed="#onPasswordKeyPressed" style="-fx-padding: 8px;"/>
+            </children>
+        </VBox>
+
+        <Label fx:id="lblError" style="-fx-text-fill: #e74c3c; -fx-font-weight: bold;"/>
+
+        <Button text="Sign In" onAction="#onSignInClicked" maxWidth="Infinity" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;"/>
+
+        <HBox spacing="5" alignment="CENTER">
+            <children>
+                <Label text="New here?" style="-fx-text-fill: #7f8c8d;"/>
+                <Hyperlink text="Create an account" onAction="#onRegisterClicked" style="-fx-text-fill: #3498db;"/>
+            </children>
+        </HBox>
+    </children>
+</VBox>

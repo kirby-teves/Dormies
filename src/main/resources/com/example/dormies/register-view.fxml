@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" prefHeight="480" prefWidth="400" spacing="15" style="-fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Register.RegisterController">
+    <padding>
+        <Insets bottom="30" left="40" right="40" top="30" />
+    </padding>
+    <children>
+        <Label style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="Register" />
+        <Label style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;" text="Create a new tenant account" />
+
+        <VBox alignment="CENTER_LEFT" spacing="10">
+            <children>
+                <Label style="-fx-font-weight: bold; -fx-text-fill: #34495e;" text="Full Name" />
+                <TextField fx:id="nameInput" promptText="Enter Full Name" style="-fx-padding: 8px;" />
+
+                <Label style="-fx-font-weight: bold; -fx-text-fill: #34495e;" text="Username / ID" />
+                <TextField fx:id="idInput" promptText="Enter Username or ID" style="-fx-padding: 8px;" />
+
+                <Label style="-fx-font-weight: bold; -fx-text-fill: #34495e;" text="Password" />
+                <PasswordField fx:id="passwordInput" promptText="Enter Password" style="-fx-padding: 8px;" />
+            </children>
+        </VBox>
+
+        <Button maxWidth="Infinity" onAction="#handleRegister" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;" text="Register" />
+
+        <HBox alignment="CENTER" spacing="5">
+            <children>
+                <Label style="-fx-text-fill: #7f8c8d;" text="Already registered?" />
+                <Hyperlink onAction="#handleBackToLogin" style="-fx-text-fill: #3498db;" text="Sign In" />
+            </children>
+        </HBox>
+    </children>
+</VBox>

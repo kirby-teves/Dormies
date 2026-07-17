@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox prefWidth="750" prefHeight="550" spacing="15" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Dormies.DormiesController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <children>
+                <Label text="Tenant Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                <Pane HBox.hgrow="ALWAYS" />
+                <Button text="Logout" onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+            </children>
+        </HBox>
+        <TextArea fx:id="detailsText" editable="false" prefHeight="100"/>
+        <VBox spacing="10">
+            <children>
+                <Separator/>
+                <Label text="Submit Maintenance Request" style="-fx-font-weight: bold;"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <children>
+                        <TextField fx:id="descInput" promptText="Describe the problem..." HBox.hgrow="ALWAYS"/>
+                        <Button text="Submit" onAction="#handleSubmitIssue"/>
+                    </children>
+                </HBox>
+                <Separator/>
+                <Label text="Pay Rent" style="-fx-font-weight: bold;"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <children>
+                        <TextField fx:id="amtInput" promptText="Amount ($)"/>
+                        <Button text="Submit Payment" onAction="#handlePayment"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</VBox>

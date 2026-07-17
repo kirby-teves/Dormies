@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox prefWidth="750" prefHeight="550" spacing="15" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Dormies.DormiesController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <children>
+                <Label text="Staff Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                <Pane HBox.hgrow="ALWAYS" />
+                <Button text="Logout" onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+            </children>
+        </HBox>
+        <Label text="Assign Room" style="-fx-font-weight: bold;"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <children>
+                <ComboBox fx:id="roomCombo" promptText="Select Available Room" onShowing="#handleRoomComboShowing"/>
+                <ComboBox fx:id="staffTenantCombo" promptText="Select Roomless Tenant" onShowing="#handleTenantComboShowing"/>
+                <Button text="Assign Room" onAction="#handleAssignRoom"/>
+            </children>
+        </HBox>
+        <Separator/>
+        <Label text="All Maintenance Requests" style="-fx-font-weight: bold;"/>
+        <ListView fx:id="requestList" prefHeight="150"/>
+        <HBox spacing="10">
+            <children>
+                <Button text="Mark Resolved" onAction="#handleResolveRequest"/>
+                <Button text="Delete Request" onAction="#handleDeleteRequest" style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+            </children>
+        </HBox>
+    </children>
+</VBox>

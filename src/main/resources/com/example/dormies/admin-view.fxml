@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox prefWidth="750" prefHeight="550" spacing="15" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Dormies.DormiesController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <children>
+                <Label text="Admin Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                <Pane HBox.hgrow="ALWAYS" />
+                <Button text="Logout" onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+            </children>
+        </HBox>
+        <Label text="Manage Rooms" style="-fx-font-weight: bold;"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <children>
+                <TextField fx:id="numInput" promptText="Room Number"/>
+                <ComboBox fx:id="statusCombo"/>
+                <Button text="Add Room" onAction="#handleAddRoom"/>
+                <Button text="Delete Room" onAction="#handleDeleteRoom" style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+            </children>
+        </HBox>
+        <Separator/>
+        <Label text="Remove Tenant" style="-fx-font-weight: bold;"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <children>
+                <ComboBox fx:id="tenantCombo" promptText="Select Tenant"/>
+                <Button text="Remove" onAction="#handleRemoveTenant"/>
+            </children>
+        </HBox>
+        <Separator/>
+        <Label text="Reports" style="-fx-font-weight: bold;"/>
+        <Button text="Generate Report" onAction="#handleGenerateReport"/>
+        <TextArea fx:id="reportText" editable="false" prefHeight="150"/>
+    </children>
+</VBox>
