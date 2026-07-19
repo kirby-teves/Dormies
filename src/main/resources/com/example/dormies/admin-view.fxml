@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox prefWidth="750" prefHeight="550" spacing="15" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Dormies.DormiesController">
+<VBox prefWidth="750" prefHeight="550" spacing="15" stylesheets="@style.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Dormies.DormiesController">
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>

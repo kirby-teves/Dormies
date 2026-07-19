@@ -32,10 +32,16 @@ public class LoginController {
 
     public void onDarkModeClicked() {
         Scene scene = lblError.getScene();
+        java.net.URL cssResource = App.class.getResource("dark.css");
+        if (cssResource == null) {
+            System.out.println("Error: dark.css not found in the App package folder.");
+            return;
+        }
+        String darkStylePath = cssResource.toExternalForm();
         if (!isDark) {
-            scene.getStylesheets().add(LoginController.class.getResource("dark.css").toExternalForm());
+            scene.getStylesheets().add(darkStylePath);
         } else {
-            scene.getStylesheets().clear();
+            scene.getStylesheets().remove(darkStylePath);
         }
         isDark = !isDark;
     }

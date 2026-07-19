@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="15" alignment="CENTER" prefWidth="400" prefHeight="450" style="-fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Login.LoginController">
+<VBox spacing="15" alignment="CENTER" prefWidth="400" prefHeight="450" stylesheets="@style.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Login.LoginController">
     <padding>
         <Insets top="30" right="40" bottom="30" left="40"/>
     </padding>

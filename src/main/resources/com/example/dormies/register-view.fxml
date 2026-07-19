@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="CENTER" prefHeight="480" prefWidth="400" spacing="15" style="-fx-background-color: #f5f6fa;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Register.RegisterController">
+<VBox spacing="15" alignment="CENTER" prefWidth="400" prefHeight="480" stylesheets="@style.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Register.RegisterController">
     <padding>
         <Insets bottom="30" left="40" right="40" top="30" />
     </padding>

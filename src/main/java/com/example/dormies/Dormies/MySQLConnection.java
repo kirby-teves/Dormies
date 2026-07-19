@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class MySQLConnection {
     public static final String URL = "jdbc:mysql://localhost:3306/dormies_db";
     public static final String USER = "root";
-    public static final String PASS = "123";
+    public static final String PASS = "";
 
     public static Connection getConnection() {
         try {

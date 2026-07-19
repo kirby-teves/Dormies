@@ -2,17 +2,20 @@ package com.example.dormies.Dormies;
 
 import com.example.dormies.App;
 import com.example.dormies.Login.LoginController;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 
 import java.sql.*;
 import java.util.UUID;
+import java.util.function.Predicate;
 
+@SuppressWarnings("unused")
 public class DormiesController {
 
-    private final ObservableList<Room> rooms = FXCollections.observableArrayList();
-    private final ObservableList<Tenant> tenants = FXCollections.observableArrayList();
+    private final ObservableList<Room> room = FXCollections.observableArrayList();
+    private final ObservableList<Tenant> tenant = FXCollections.observableArrayList();
     private final ObservableList<MaintenanceRequest> requests = FXCollections.observableArrayList();
     private final ObservableList<Payment> payments = FXCollections.observableArrayList();
 
@@ -46,87 +49,80 @@ public class DormiesController {
             statusCombo.getSelectionModel().selectFirst();
         }
         if (tenantCombo != null) {
-            tenantCombo.setItems(tenants);
+            tenantCombo.setItems(tenant);
         }
+    }
+
+    private <T> T findItemInList(ObservableList<T> list, Predicate<T> condition) {
+        for (T item : list) {
+            if (condition.test(item)) {
+                return item;
+            }
+        }
+        return null;
     }
 
     private void refreshAllFromDB() {
-        loadRoomsFromDB();
-        loadTenantsFromDB();
-        loadRequestsFromDB();
+        new Thread(() -> {
+            java.util.List<Room> tempRooms = new java.util.ArrayList<>();
+            java.util.List<Tenant> tempTenants = new java.util.ArrayList<>();
+            java.util.List<MaintenanceRequest> tempRequests = new java.util.ArrayList<>();
 
-        if (loggedInTenant != null) {
-            Tenant freshTenant = null;
-            for (Tenant t : tenants) {
-                if (t.getId().equals(loggedInTenant.getId())) {
-                    freshTenant = t;
-                    break;
+            try (Connection conn = MySQLConnection.getConnection()) {
+                if (conn == null) return;
+
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("SELECT * FROM room")) {
+                    while (rs.next()) {
+                        tempRooms.add(new Room(rs.getString("room_number"), rs.getString("status")));
+                    }
                 }
-            }
-            loggedInTenant = freshTenant;
-            if (loggedInTenant != null) {
-                refreshTenantDetails(loggedInTenant);
-            } else {
-                handleLogout();
-            }
-        }
-    }
 
-    private void loadRoomsFromDB() {
-        rooms.clear();
-        try (Connection conn = MySQLConnection.getConnection()) {
-            if (conn == null) return;
-            try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT * FROM rooms")) {
-                while (rs.next()) {
-                    rooms.add(new Room(rs.getString("room_number"), rs.getString("status")));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadTenantsFromDB() {
-        tenants.clear();
-        try (Connection conn = MySQLConnection.getConnection()) {
-            if (conn == null) return;
-            try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT * FROM tenants")) {
-                while (rs.next()) {
-                    Tenant t = new Tenant(rs.getString("name"), rs.getString("id"));
-                    String assignedRoomNum = rs.getString("assigned_room");
-                    if (assignedRoomNum != null) {
-                        for (Room r : rooms) {
-                            if (r.getRoomNumber().equals(assignedRoomNum)) {
-                                t.setAssignedRoom(r);
-                                break;
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("SELECT * FROM tenant")) {
+                    while (rs.next()) {
+                        Tenant t = new Tenant(rs.getString("name"), rs.getString("id"));
+                        String assignedRoomNum = rs.getString("assigned_room");
+                        if (assignedRoomNum != null) {
+                            for (Room r : tempRooms) {
+                                if (r.getRoomNumber().equals(assignedRoomNum)) {
+                                    t.setAssignedRoom(r);
+                                    break;
+                                }
                             }
                         }
+                        tempTenants.add(t);
                     }
-                    tenants.add(t);
                 }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
-    private void loadRequestsFromDB() {
-        requests.clear();
-        try (Connection conn = MySQLConnection.getConnection()) {
-            if (conn == null) return;
-            try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery("SELECT * FROM maintenance_requests")) {
-                while (rs.next()) {
-                    MaintenanceRequest req = new MaintenanceRequest(rs.getString("request_id"), rs.getString("description"));
-                    req.updateStatus(rs.getString("status"));
-                    requests.add(req);
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("SELECT * FROM maintenance_request")) {
+                    while (rs.next()) {
+                        MaintenanceRequest req = new MaintenanceRequest(rs.getString("request_id"), rs.getString("description"));
+                        req.updateStatus(rs.getString("status"));
+                        tempRequests.add(req);
+                    }
                 }
+
+            } catch (SQLException e) {
+                System.out.println("Database load error: " + e.getMessage());
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+
+            Platform.runLater(() -> {
+                room.setAll(tempRooms);
+                tenant.setAll(tempTenants);
+                requests.setAll(tempRequests);
+
+                if (loggedInTenant != null) {
+                    loggedInTenant = findItemInList(tenant, t -> t.getId().equals(loggedInTenant.getId()));
+                    if (loggedInTenant != null) {
+                        refreshTenantDetails(loggedInTenant);
+                    } else {
+                        handleLogout();
+                    }
+                }
+            });
+        }).start();
     }
 
     public void handleLogout() {
@@ -144,7 +140,7 @@ public class DormiesController {
                 LoginController.user_login = null;
                 java.io.File file = new java.io.File("tenant.ser");
                 if (file.exists()) {
-                    file.delete();
+                    boolean deleted = file.delete();
                 }
 
                 javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(App.class.getResource("login-view.fxml"));
@@ -152,28 +148,31 @@ public class DormiesController {
                 stage.setScene(scene);
             }
         } catch (java.io.IOException e) {
-            e.printStackTrace();
+            System.out.println("Logout navigation failed: " + e.getMessage());
         }
     }
 
     public void handleAddRoom() {
         String roomNum = numInput.getText().trim();
         if (!roomNum.isEmpty()) {
-            String sql = "INSERT INTO rooms (room_number, status) VALUES (?, ?)";
-            try (Connection conn = MySQLConnection.getConnection()) {
-                if (conn == null) return;
-                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    pstmt.setString(1, roomNum);
-                    pstmt.setString(2, statusCombo.getValue());
-                    pstmt.executeUpdate();
-                    numInput.clear();
-                    showPopup("Success", "Room " + roomNum + " added.");
+            String sql = "INSERT INTO room (room_number, status) VALUES (?, ?)";
+            new Thread(() -> {
+                try (Connection conn = MySQLConnection.getConnection()) {
+                    if (conn == null) return;
+                    try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                        pstmt.setString(1, roomNum);
+                        pstmt.setString(2, statusCombo.getValue());
+                        pstmt.executeUpdate();
+                        Platform.runLater(() -> {
+                            numInput.clear();
+                            showPopup("Success", "Room " + roomNum + " added.");
+                            refreshAllFromDB();
+                        });
+                    }
+                } catch (SQLException e) {
+                    Platform.runLater(() -> showPopup("Error", "Failed to add room: " + e.getMessage()));
                 }
-            } catch (SQLException e) {
-                showPopup("Error", "Failed to add room: " + e.getMessage());
-                return;
-            }
-            refreshAllFromDB();
+            }).start();
         } else {
             showPopup("Error", "Enter a room number first.");
         }
@@ -182,23 +181,26 @@ public class DormiesController {
     public void handleDeleteRoom() {
         String roomNum = numInput.getText().trim();
         if (!roomNum.isEmpty()) {
-            try (Connection conn = MySQLConnection.getConnection()) {
-                if (conn == null) return;
-                try (PreparedStatement pstmt = conn.prepareStatement("DELETE FROM rooms WHERE room_number = ?")) {
-                    pstmt.setString(1, roomNum);
-                    int deleted = pstmt.executeUpdate();
-                    if (deleted > 0) {
-                        numInput.clear();
-                        showPopup("Success", "Room " + roomNum + " deleted.");
-                    } else {
-                        showPopup("Error", "Room not found.");
+            new Thread(() -> {
+                try (Connection conn = MySQLConnection.getConnection()) {
+                    if (conn == null) return;
+                    try (PreparedStatement pstmt = conn.prepareStatement("DELETE FROM room WHERE room_number = ?")) {
+                        pstmt.setString(1, roomNum);
+                        int deleted = pstmt.executeUpdate();
+                        Platform.runLater(() -> {
+                            if (deleted > 0) {
+                                numInput.clear();
+                                showPopup("Success", "Room " + roomNum + " deleted.");
+                                refreshAllFromDB();
+                            } else {
+                                showPopup("Error", "Room not found.");
+                            }
+                        });
                     }
+                } catch (SQLException e) {
+                    Platform.runLater(() -> showPopup("Error", "Failed to delete room: " + e.getMessage()));
                 }
-            } catch (SQLException e) {
-                showPopup("Error", "Failed to delete room: " + e.getMessage());
-                return;
-            }
-            refreshAllFromDB();
+            }).start();
         } else {
             showPopup("Error", "Enter a room number to delete.");
         }
@@ -207,27 +209,30 @@ public class DormiesController {
     public void handleRemoveTenant() {
         Tenant t = tenantCombo.getValue();
         if (t != null) {
-            try (Connection conn = MySQLConnection.getConnection()) {
-                if (conn == null) return;
-                if (t.getAssignedRoom() != null) {
-                    try (PreparedStatement pstmtRoom = conn.prepareStatement("UPDATE rooms SET status = 'Available' WHERE room_number = ?")) {
-                        pstmtRoom.setString(1, t.getAssignedRoom().getRoomNumber());
-                        pstmtRoom.executeUpdate();
+            new Thread(() -> {
+                try (Connection conn = MySQLConnection.getConnection()) {
+                    if (conn == null) return;
+                    if (t.getAssignedRoom() != null) {
+                        try (PreparedStatement pstmtRoom = conn.prepareStatement("UPDATE room SET status = 'Available' WHERE room_number = ?")) {
+                            pstmtRoom.setString(1, t.getAssignedRoom().getRoomNumber());
+                            pstmtRoom.executeUpdate();
+                        }
                     }
+                    try (PreparedStatement pstmtTenant = conn.prepareStatement("DELETE FROM tenants WHERE id = ?")) {
+                        pstmtTenant.setString(1, t.getId());
+                        pstmtTenant.executeUpdate();
+                    }
+                    Platform.runLater(() -> {
+                        if (loggedInTenant != null && loggedInTenant.equals(t)) {
+                            loggedInTenant = null;
+                        }
+                        showPopup("Success", "Tenant " + t.getName() + " removed.");
+                        refreshAllFromDB();
+                    });
+                } catch (SQLException e) {
+                    Platform.runLater(() -> showPopup("Error", "Failed to remove tenant: " + e.getMessage()));
                 }
-                try (PreparedStatement pstmtTenant = conn.prepareStatement("DELETE FROM tenants WHERE id = ?")) {
-                    pstmtTenant.setString(1, t.getId());
-                    pstmtTenant.executeUpdate();
-                }
-            } catch (SQLException e) {
-                showPopup("Error", "Failed to remove tenant: " + e.getMessage());
-                return;
-            }
-            if (loggedInTenant != null && loggedInTenant.equals(t)) {
-                loggedInTenant = null;
-            }
-            refreshAllFromDB();
-            showPopup("Success", "Tenant " + t.getName() + " removed.");
+            }).start();
         } else {
             showPopup("Error", "Select a tenant first.");
         }
@@ -235,35 +240,37 @@ public class DormiesController {
 
     public void handleGenerateReport() {
         admin.viewReports();
-        long totalRooms = rooms.size();
-        long freeRooms = rooms.stream().filter(Room::isAvailable).count();
-        long totalTenants = tenants.size();
-        double totalRevenue = payments.stream().mapToDouble(Payment::getAmount).sum();
-        long openIssues = requests.stream().filter(r -> "Pending".equals(r.getStatus())).count();
+        new Thread(() -> {
+            long totalRooms = room.size();
+            long freeRooms = room.stream().filter(Room::isAvailable).count();
+            long totalTenants = tenant.size();
+            double totalRevenue = payments.stream().mapToDouble(Payment::getAmount).sum();
+            long openIssues = requests.stream().filter(r -> "Pending".equals(r.getStatus())).count();
 
-        String reportData = String.format(
-                """
-                        --- DORM SYSTEM STATUS ---
-                        Total Rooms: %d
-                        Available Rooms: %d
-                        Total Tenants: %d
-                        Total Revenue: $%.2f
-                        Active Maintenance Requests: %d
-                        """,
-                totalRooms, freeRooms, totalTenants, totalRevenue, openIssues
-        );
-        reportText.setText(reportData);
+            String reportData = String.format(
+                    """
+                            --- DORM SYSTEM STATUS ---
+                            Total Rooms: %d
+                            Available Rooms: %d
+                            Total Tenants: %d
+                            Total Revenue: $%.2f
+                            Active Maintenance Requests: %d
+                            """,
+                    totalRooms, freeRooms, totalTenants, totalRevenue, openIssues
+            );
+            Platform.runLater(() -> reportText.setText(reportData));
+        }).start();
     }
 
     public void handleRoomComboShowing() {
         roomCombo.setItems(FXCollections.observableArrayList(
-                rooms.stream().filter(Room::isAvailable).toList()
+                room.stream().filter(Room::isAvailable).toList()
         ));
     }
 
     public void handleTenantComboShowing() {
         staffTenantCombo.setItems(FXCollections.observableArrayList(
-                tenants.stream().filter(t -> t.getAssignedRoom() == null).toList()
+                tenant.stream().filter(t -> t.getAssignedRoom() == null).toList()
         ));
     }
 
@@ -271,25 +278,28 @@ public class DormiesController {
         Room r = roomCombo.getValue();
         Tenant t = staffTenantCombo.getValue();
         if (r != null && t != null) {
-            try (Connection conn = MySQLConnection.getConnection()) {
-                if (conn == null) return;
-                try (PreparedStatement pstmtTenant = conn.prepareStatement("UPDATE tenants SET assigned_room = ? WHERE id = ?")) {
-                    pstmtTenant.setString(1, r.getRoomNumber());
-                    pstmtTenant.setString(2, t.getId());
-                    pstmtTenant.executeUpdate();
+            new Thread(() -> {
+                try (Connection conn = MySQLConnection.getConnection()) {
+                    if (conn == null) return;
+                    try (PreparedStatement pstmtTenant = conn.prepareStatement("UPDATE tenant SET assigned_room = ? WHERE id = ?")) {
+                        pstmtTenant.setString(1, r.getRoomNumber());
+                        pstmtTenant.setString(2, t.getId());
+                        pstmtTenant.executeUpdate();
+                    }
+                    try (PreparedStatement pstmtRoom = conn.prepareStatement("UPDATE room SET status = 'Occupied' WHERE room_number = ?")) {
+                        pstmtRoom.setString(1, r.getRoomNumber());
+                        pstmtRoom.executeUpdate();
+                    }
+                    Platform.runLater(() -> {
+                        roomCombo.getSelectionModel().clearSelection();
+                        staffTenantCombo.getSelectionModel().clearSelection();
+                        showPopup("Success", "Room " + r.getRoomNumber() + " assigned to " + t.getName());
+                        refreshAllFromDB();
+                    });
+                } catch (SQLException e) {
+                    Platform.runLater(() -> showPopup("Error", "Assignment failed: " + e.getMessage()));
                 }
-                try (PreparedStatement pstmtRoom = conn.prepareStatement("UPDATE rooms SET status = 'Occupied' WHERE room_number = ?")) {
-                    pstmtRoom.setString(1, r.getRoomNumber());
-                    pstmtRoom.executeUpdate();
-                }
-                roomCombo.getSelectionModel().clearSelection();
-                staffTenantCombo.getSelectionModel().clearSelection();
-                showPopup("Success", "Room " + r.getRoomNumber() + " assigned to " + t.getName());
-            } catch (SQLException e) {
-                showPopup("Error", "Assignment failed: " + e.getMessage());
-                return;
-            }
-            refreshAllFromDB();
+            }).start();
         } else {
             showPopup("Error", "Select both a room and a tenant.");
         }
@@ -299,18 +309,21 @@ public class DormiesController {
         int selectedIndex = requestList.getSelectionModel().getSelectedIndex();
         if (selectedIndex >= 0) {
             MaintenanceRequest req = requests.get(selectedIndex);
-            try (Connection conn = MySQLConnection.getConnection()) {
-                if (conn == null) return;
-                try (PreparedStatement pstmt = conn.prepareStatement("UPDATE maintenance_requests SET status = 'Resolved' WHERE request_id = ?")) {
-                    pstmt.setString(1, req.getRequestId());
-                    pstmt.executeUpdate();
-                    showPopup("Success", "Request resolved.");
+            new Thread(() -> {
+                try (Connection conn = MySQLConnection.getConnection()) {
+                    if (conn == null) return;
+                    try (PreparedStatement pstmt = conn.prepareStatement("UPDATE maintenance_requests SET status = 'Resolved' WHERE request_id = ?")) {
+                        pstmt.setString(1, req.getRequestId());
+                        pstmt.executeUpdate();
+                        Platform.runLater(() -> {
+                            showPopup("Success", "Request resolved.");
+                            refreshAllFromDB();
+                        });
+                    }
+                } catch (SQLException e) {
+                    Platform.runLater(() -> showPopup("Error", "Failed to resolve request: " + e.getMessage()));
                 }
-            } catch (SQLException e) {
-                showPopup("Error", "Failed to resolve request: " + e.getMessage());
-                return;
-            }
-            refreshAllFromDB();
+            }).start();
         } else {
             showPopup("Error", "Select a request from the list first.");
         }
@@ -320,18 +333,21 @@ public class DormiesController {
         int selectedIndex = requestList.getSelectionModel().getSelectedIndex();
         if (selectedIndex >= 0) {
             MaintenanceRequest req = requests.get(selectedIndex);
-            try (Connection conn = MySQLConnection.getConnection()) {
-                if (conn == null) return;
-                try (PreparedStatement pstmt = conn.prepareStatement("DELETE FROM maintenance_requests WHERE request_id = ?")) {
-                    pstmt.setString(1, req.getRequestId());
-                    pstmt.executeUpdate();
-                    showPopup("Success", "Request deleted.");
+            new Thread(() -> {
+                try (Connection conn = MySQLConnection.getConnection()) {
+                    if (conn == null) return;
+                    try (PreparedStatement pstmt = conn.prepareStatement("DELETE FROM maintenance_requests WHERE request_id = ?")) {
+                        pstmt.setString(1, req.getRequestId());
+                        pstmt.executeUpdate();
+                        Platform.runLater(() -> {
+                            showPopup("Success", "Request deleted.");
+                            refreshAllFromDB();
+                        });
+                    }
+                } catch (SQLException e) {
+                    Platform.runLater(() -> showPopup("Error", "Failed to delete request: " + e.getMessage()));
                 }
-            } catch (SQLException e) {
-                showPopup("Error", "Failed to delete request: " + e.getMessage());
-                return;
-            }
-            refreshAllFromDB();
+            }).start();
         } else {
             showPopup("Error", "Select a request from the list first.");
         }
@@ -343,21 +359,24 @@ public class DormiesController {
         if (t != null && !desc.isEmpty()) {
             String reqId = "REQ-" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
             String sql = "INSERT INTO maintenance_requests (request_id, tenant_id, description, status) VALUES (?, ?, ?, 'Pending')";
-            try (Connection conn = MySQLConnection.getConnection()) {
-                if (conn == null) return;
-                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    pstmt.setString(1, reqId);
-                    pstmt.setString(2, t.getId());
-                    pstmt.setString(3, desc);
-                    pstmt.executeUpdate();
-                    descInput.clear();
-                    showPopup("Success", "Request submitted. ID: " + reqId);
+            new Thread(() -> {
+                try (Connection conn = MySQLConnection.getConnection()) {
+                    if (conn == null) return;
+                    try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                        pstmt.setString(1, reqId);
+                        pstmt.setString(2, t.getId());
+                        pstmt.setString(3, desc);
+                        pstmt.executeUpdate();
+                        Platform.runLater(() -> {
+                            descInput.clear();
+                            showPopup("Success", "Request submitted. ID: " + reqId);
+                            refreshAllFromDB();
+                        });
+                    }
+                } catch (SQLException e) {
+                    Platform.runLater(() -> showPopup("Error", "Submission failed: " + e.getMessage()));
                 }
-            } catch (SQLException e) {
-                showPopup("Error", "Submission failed: " + e.getMessage());
-                return;
-            }
-            refreshAllFromDB();
+            }).start();
         } else {
             showPopup("Error", "Describe the issue first.");
         }
