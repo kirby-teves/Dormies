@@ -1,6 +1,6 @@
 package com.example.dormies.Dormies;
 
-public abstract class Person {
+public abstract class Person implements java.io.Serializable {
     private String name;
     private String id;
 

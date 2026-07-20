@@ -1,22 +1,21 @@
 package com.example.dormies.Register;
 
 import com.example.dormies.App;
-import com.example.dormies.Dormies.MySQLConnection;
+import com.example.dormies.Dormies.*;
+import com.example.dormies.Repositories.TenantRepository;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class RegisterController {
 
     public TextField nameInput;
     public TextField idInput;
     public PasswordField passwordInput;
+
+    private final TenantRepository tenantRepository = new TenantRepository();
 
     public void handleRegister() {
         String name = nameInput.getText().trim();
@@ -28,40 +27,17 @@ public class RegisterController {
             return;
         }
 
-        if (isIdExists(id)) {
+        if (tenantRepository.isIdExists(id)) {
             showPopup("Error", "A tenant with this ID/Username already exists.");
             return;
         }
 
-        String sql = "INSERT INTO tenant (ID, Name, Password_hash, Assigned_room) VALUES (?, ?, ?, NULL)";
-        try (Connection conn = MySQLConnection.getConnection()) {
-            if (conn == null) return;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, id);
-                pstmt.setString(2, name);
-                pstmt.setString(3, hashPassword(password));
-                pstmt.executeUpdate();
-                showPopup("Success", "Registration successful!");
-            }
-        } catch (SQLException e) {
+        try {
+            tenantRepository.registerTenant(id, name, hashPassword(password));
+            showPopup("Success", "Registration successful!");
+        } catch (RuntimeException e) {
             showPopup("Error", "Registration failed: " + e.getMessage());
         }
-    }
-
-    private boolean isIdExists(String id) {
-        String sql = "SELECT 1 FROM tenant WHERE ID = ?";
-        try (Connection conn = MySQLConnection.getConnection()) {
-            if (conn == null) return false;
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setString(1, id);
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    return rs.next();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
     }
 
     private String hashPassword(String password) {

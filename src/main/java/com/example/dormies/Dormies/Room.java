@@ -1,6 +1,6 @@
 package com.example.dormies.Dormies;
 
-public class Room {
+public class Room implements java.io.Serializable {
     private String roomNumber;
     private String status;
 

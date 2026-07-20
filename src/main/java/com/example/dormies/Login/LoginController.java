@@ -1,8 +1,9 @@
 package com.example.dormies.Login;
 
 import com.example.dormies.App;
-import com.example.dormies.Dormies.MySQLConnection;
-import com.example.dormies.Dormies.Tenant;
+import com.example.dormies.Dormies.*;
+import com.example.dormies.Repositories.TenantRepository;
+import com.example.dormies.Dormies.Person;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -12,32 +13,23 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Objects;
 
 public class LoginController {
-    public static Tenant user_login;
+    public static Person user_login;
     public TextField tfUsername;
     public PasswordField pfPassword;
     public Label lblError;
     static boolean isDark = false;
 
+    private final TenantRepository tenantRepository = new TenantRepository();
+
     public void onDarkModeClicked() {
         Scene scene = lblError.getScene();
-        java.net.URL cssResource = App.class.getResource("dark.css");
-        if (cssResource == null) {
-            System.out.println("Error: dark.css not found in the App package folder.");
-            return;
-        }
-        String darkStylePath = cssResource.toExternalForm();
+        String darkStylePath = Objects.requireNonNull(App.class.getResource("dark.css")).toExternalForm();
         if (!isDark) {
             scene.getStylesheets().add(darkStylePath);
         } else {
@@ -59,6 +51,9 @@ public class LoginController {
         if (username.equals("admin") && password.equals("67")) {
             lblError.setText("Successfully logged in");
             success = true;
+            Admin adminUser = new Admin("admin", "67");
+            SessionManager.saveSession(adminUser);
+            user_login = adminUser;
             Stage stage = (Stage) lblError.getScene().getWindow();
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("admin-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
@@ -69,6 +64,9 @@ public class LoginController {
         if (username.equals("staff") && password.equals("420")) {
             lblError.setText("Successfully logged in");
             success = true;
+            Staff staffUser = new Staff("staff", "420");
+            SessionManager.saveSession(staffUser);
+            user_login = staffUser;
             Stage stage = (Stage) lblError.getScene().getWindow();
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("staff-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
@@ -77,38 +75,17 @@ public class LoginController {
         }
 
         String hashedPassword = hashPassword(password);
+        Tenant matched = tenantRepository.authenticate(username, hashedPassword);
 
-        try (Connection c = MySQLConnection.getConnection();
-             Statement stmt = c.createStatement()) {
-            if (c == null) return;
-            String query = "SELECT * FROM tenant";
-            ResultSet rs = stmt.executeQuery(query);
-            while (rs.next()) {
-                String id = rs.getString("id");
-                String name = rs.getString("name");
-                String passHash = rs.getString("password_hash");
-
-                if (id.equalsIgnoreCase(username) && passHash.equals(hashedPassword)) {
-                    lblError.setText("Successfully logged in");
-                    Tenant tenant = new Tenant(name, id);
-                    try (ObjectOutputStream oos = new ObjectOutputStream(
-                            new FileOutputStream("tenant.ser")
-                    )) {
-                        oos.writeObject(tenant);
-                    } catch (IOException e) {
-                        System.out.println("File cannot be saved");
-                    }
-                    user_login = tenant;
-                    success = true;
-                    Stage stage = (Stage) lblError.getScene().getWindow();
-                    FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("tenant-view.fxml"));
-                    Scene scene = new Scene(fxmlLoader.load());
-                    stage.setScene(scene);
-                    break;
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println("SQLException: " + e.getMessage());
+        if (matched != null) {
+            lblError.setText("Successfully logged in");
+            SessionManager.saveSession(matched);
+            user_login = matched;
+            success = true;
+            Stage stage = (Stage) lblError.getScene().getWindow();
+            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("tenant-view.fxml"));
+            Scene scene = new Scene(fxmlLoader.load());
+            stage.setScene(scene);
         }
 
         if (!success) {
@@ -126,7 +103,6 @@ public class LoginController {
         try {
             Stage stage = (Stage) lblError.getScene().getWindow();
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("register-view.fxml"));
-            stage.setTitle("Dormies - register!");
             Scene scene = new Scene(fxmlLoader.load());
             stage.setScene(scene);
         } catch (IOException e) {

@@ -1,6 +1,6 @@
 package com.example.dormies.Dormies;
 
-public class Payment {
+public class Payment implements java.io.Serializable {
     private double amount;
     private String date;
 

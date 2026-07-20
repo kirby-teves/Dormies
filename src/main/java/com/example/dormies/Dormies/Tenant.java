@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Tenant extends Person implements Payable {
-    private Room assignedRoom;
-    private List<Payment> payments;
-    private List<MaintenanceRequest> maintenanceRequests;
+    private transient Room assignedRoom;
+    private transient List<Payment> payments;
+    private transient List<MaintenanceRequest> maintenanceRequests;
 
     public Tenant(String name, String id) {
         super(name, id);

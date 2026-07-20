@@ -1,6 +1,6 @@
 package com.example.dormies.Dormies;
 
-public class MaintenanceRequest {
+public class MaintenanceRequest implements java.io.Serializable {
     private String requestId;
     private String status; // e.g., "Pending", "In Progress", "Resolved"
     private String description;
