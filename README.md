@@ -51,7 +51,7 @@ To maintain stateful navigation, Dormies utilizes Java's built-in **Object Seria
 * **Benefit:** Isolates payment processing rules from the `DormiesController`, making it easy to swap or add new payment processors (like PayPal, Gcash, Bank Transfer) without changing your main GUI code.
 
 ## Class Diagram
-<img width="991" height="419" alt="image" src="https://github.com/user-attachments/assets/83161df3-7284-4f70-a164-5dfbdff5c417" />
+<img width="988" height="408" alt="image" src="https://github.com/user-attachments/assets/237bd9d9-a76e-411f-9a0f-79175f653410" />
 
 ## Sequence Diagram
 <img width="434" height="426" alt="image" src="https://github.com/user-attachments/assets/22cbf165-b937-4b60-ac23-e82981c68934" />
