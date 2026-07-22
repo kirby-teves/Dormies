@@ -1,4 +1,4 @@
-package com.example.dormies.Dormies;
+package com.example.dormies.model;
 
 public class MaintenanceRequest implements java.io.Serializable {
     private String requestId;

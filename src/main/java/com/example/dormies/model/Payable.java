@@ -1,4 +1,4 @@
-package com.example.dormies.Dormies;
+package com.example.dormies.model;
 
 public interface Payable {
     void pay(double amount);

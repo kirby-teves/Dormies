@@ -1,4 +1,4 @@
-package com.example.dormies.Dormies;
+package com.example.dormies.model;
 
 import java.io.*;
 

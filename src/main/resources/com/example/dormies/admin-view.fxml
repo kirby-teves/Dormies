@@ -1,41 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
 
-<VBox prefWidth="750" prefHeight="550" spacing="15" stylesheets="@style.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Dormies.DormiesController">
+<VBox prefHeight="550" prefWidth="750" spacing="15" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Dormies.DormiesController">
     <padding>
-        <Insets top="20" right="20" bottom="20" left="20"/>
+        <Insets bottom="20" left="20" right="20" top="20" />
     </padding>
     <children>
         <HBox alignment="CENTER_LEFT" spacing="20">
             <children>
-                <Label text="Admin Dashboard" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="Admin Dashboard" />
                 <Pane HBox.hgrow="ALWAYS" />
-                <Button text="Logout" onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+                <Button onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Logout" />
             </children>
         </HBox>
-        <Label text="Manage Rooms" style="-fx-font-weight: bold;"/>
-        <HBox spacing="10" alignment="CENTER_LEFT">
+
+        <HBox spacing="20" VBox.vgrow="ALWAYS">
             <children>
-                <TextField fx:id="numInput" promptText="Room Number"/>
-                <ComboBox fx:id="statusCombo"/>
-                <Button text="Add Room" onAction="#handleAddRoom"/>
-                <Button text="Delete Room" onAction="#handleDeleteRoom" style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+                <VBox prefWidth="350" spacing="15" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label style="-fx-font-weight: bold;" text="Manage Rooms" />
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <children>
+                                <TextField fx:id="numInput" promptText="Room Number" />
+                                <ComboBox fx:id="statusCombo" />
+                                <Button onAction="#handleAddRoom" text="Add" />
+                                <Button onAction="#handleDeleteRoom" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Delete" />
+                            </children>
+                        </HBox>
+                        <Separator />
+
+                        <Label style="-fx-font-weight: bold;" text="Assign Room" />
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <children>
+                                <ComboBox fx:id="roomCombo" onShowing="#handleRoomComboShowing" promptText="Select Room" />
+                                <ComboBox fx:id="staffTenantCombo" onShowing="#handleTenantComboShowing" promptText="Select Tenant" />
+                                <Button onAction="#handleAssignRoom" text="Assign" />
+                            </children>
+                        </HBox>
+                        <Separator />
+
+                        <Label style="-fx-font-weight: bold;" text="Remove Tenant" />
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <children>
+                                <ComboBox fx:id="tenantCombo" promptText="Select Tenant" />
+                                <Button onAction="#handleRemoveTenant" text="Remove" />
+                            </children>
+                        </HBox>
+                    </children>
+                </VBox>
+
+                <VBox prefWidth="350" spacing="15" HBox.hgrow="ALWAYS">
+                    <children>
+                        <Label style="-fx-font-weight: bold;" text="Maintenance Requests" />
+                        <ListView fx:id="requestList" prefHeight="120" />
+                        <HBox spacing="10">
+                            <children>
+                                <Button onAction="#handleResolveRequest" text="Mark Resolved" />
+                                <Button onAction="#handleDeleteRequest" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Delete Request" />
+                            </children>
+                        </HBox>
+                        <Separator />
+
+                        <Label style="-fx-font-weight: bold;" text="Reports" />
+                        <Button onAction="#handleGenerateReport" text="Generate Report" />
+                        <TextArea fx:id="reportText" editable="false" prefHeight="100" />
+                    </children>
+                </VBox>
             </children>
         </HBox>
-        <Separator/>
-        <Label text="Remove Tenant" style="-fx-font-weight: bold;"/>
-        <HBox spacing="10" alignment="CENTER_LEFT">
-            <children>
-                <ComboBox fx:id="tenantCombo" promptText="Select Tenant"/>
-                <Button text="Remove" onAction="#handleRemoveTenant"/>
-            </children>
-        </HBox>
-        <Separator/>
-        <Label text="Reports" style="-fx-font-weight: bold;"/>
-        <Button text="Generate Report" onAction="#handleGenerateReport"/>
-        <TextArea fx:id="reportText" editable="false" prefHeight="150"/>
     </children>
 </VBox>

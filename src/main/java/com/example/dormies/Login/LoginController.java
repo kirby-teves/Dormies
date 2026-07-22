@@ -1,9 +1,11 @@
 package com.example.dormies.Login;
 
 import com.example.dormies.App;
-import com.example.dormies.Dormies.*;
 import com.example.dormies.Repositories.TenantRepository;
-import com.example.dormies.Dormies.Person;
+import com.example.dormies.model.Person;
+import com.example.dormies.model.PersonFactory;
+import com.example.dormies.model.SessionManager;
+import com.example.dormies.model.Tenant;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -16,7 +18,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.Objects;
 
 public class LoginController {
     public static Person user_login;
@@ -27,16 +28,6 @@ public class LoginController {
 
     private final TenantRepository tenantRepository = new TenantRepository();
 
-    public void onDarkModeClicked() {
-        Scene scene = lblError.getScene();
-        String darkStylePath = Objects.requireNonNull(App.class.getResource("dark.css")).toExternalForm();
-        if (!isDark) {
-            scene.getStylesheets().add(darkStylePath);
-        } else {
-            scene.getStylesheets().remove(darkStylePath);
-        }
-        isDark = !isDark;
-    }
 
     public void onSignInClicked() throws IOException {
         boolean success = false;
@@ -51,24 +42,11 @@ public class LoginController {
         if (username.equals("admin") && password.equals("67")) {
             lblError.setText("Successfully logged in");
             success = true;
-            Admin adminUser = new Admin("admin", "67");
+            Person adminUser = PersonFactory.createPerson("ADMIN", "admin", "67");
             SessionManager.saveSession(adminUser);
             user_login = adminUser;
             Stage stage = (Stage) lblError.getScene().getWindow();
             FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("admin-view.fxml"));
-            Scene scene = new Scene(fxmlLoader.load());
-            stage.setScene(scene);
-            return;
-        }
-
-        if (username.equals("staff") && password.equals("420")) {
-            lblError.setText("Successfully logged in");
-            success = true;
-            Staff staffUser = new Staff("staff", "420");
-            SessionManager.saveSession(staffUser);
-            user_login = staffUser;
-            Stage stage = (Stage) lblError.getScene().getWindow();
-            FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("staff-view.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
             stage.setScene(scene);
             return;

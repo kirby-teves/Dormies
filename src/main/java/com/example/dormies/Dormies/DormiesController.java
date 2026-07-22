@@ -2,7 +2,7 @@ package com.example.dormies.Dormies;
 
 import com.example.dormies.App;
 import com.example.dormies.Login.LoginController;
-import com.example.dormies.Repositories.*;
+import com.example.dormies.model.*;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,12 +19,9 @@ public class DormiesController {
     private final ObservableList<MaintenanceRequest> requests = FXCollections.observableArrayList();
     private final ObservableList<Payment> payments = FXCollections.observableArrayList();
 
-    private final Repository<Room> roomRepo = new RoomRepository();
-    private final Repository<Tenant> tenantRepo = new TenantRepository();
-    private final Repository<MaintenanceRequest> requestRepo = new MaintenanceRequestRepository();
-
     private final Admin admin = new Admin("admin", "67");
-    private final Staff staff = new Staff("staff", "420");
+
+    private final DormitoryFacade facade = new DormitoryFacade();
 
     private Tenant loggedInTenant = null;
 
@@ -68,14 +65,17 @@ public class DormiesController {
 
     private void refreshAllFromDB() {
         new Thread(() -> {
-            java.util.List<Room> tempRooms = roomRepo.getAll();
-            java.util.List<Tenant> tempTenants = ((TenantRepository) tenantRepo).getAllWithRooms(tempRooms);
-            java.util.List<MaintenanceRequest> tempRequests = requestRepo.getAll();
+            java.util.List<Room> tempRooms = facade.getAllRooms();
+            java.util.List<Tenant> tempTenants = facade.getAllTenantsWithRooms();
+            java.util.List<MaintenanceRequest> tempRequests = facade.getAllRequests();
 
             Platform.runLater(() -> {
                 rooms.setAll(tempRooms);
                 tenants.setAll(tempTenants);
                 requests.setAll(tempRequests);
+                if (requestList != null) {
+                    refreshRequestList();
+                }
 
                 if (loggedInTenant != null) {
                     loggedInTenant = findItemInList(tenants, t -> t.getId().equals(loggedInTenant.getId()));
@@ -90,8 +90,7 @@ public class DormiesController {
     }
 
     public void handleLogout() {
-        try {
-            javafx.stage.Stage stage = null;
+        try {javafx.stage.Stage stage = null;
             if (detailsText != null && detailsText.getScene() != null) {
                 stage = (javafx.stage.Stage) detailsText.getScene().getWindow();
             } else if (reportText != null && reportText.getScene() != null) {
@@ -116,10 +115,9 @@ public class DormiesController {
     public void handleAddRoom() {
         String roomNum = numInput.getText().trim();
         if (!roomNum.isEmpty()) {
-            Room newRoom = new Room(roomNum, statusCombo.getValue());
             new Thread(() -> {
                 try {
-                    roomRepo.add(newRoom);
+                    facade.addRoom(roomNum, statusCombo.getValue());
                     Platform.runLater(() -> {
                         numInput.clear();
                         showPopup("Success", "Room " + roomNum + " added.");
@@ -139,7 +137,7 @@ public class DormiesController {
         if (!roomNum.isEmpty()) {
             new Thread(() -> {
                 try {
-                    roomRepo.delete(roomNum);
+                    facade.deleteRoom(roomNum);
                     Platform.runLater(() -> {
                         numInput.clear();
                         showPopup("Success", "Room " + roomNum + " deleted.");
@@ -159,10 +157,7 @@ public class DormiesController {
         if (t != null) {
             new Thread(() -> {
                 try {
-                    if (t.getAssignedRoom() != null) {
-                        ((RoomRepository) roomRepo).updateStatus(t.getAssignedRoom().getRoomNumber(), "Available");
-                    }
-                    tenantRepo.delete(t.getId());
+                    facade.removeTenant(t);
                     Platform.runLater(() -> {
                         if (loggedInTenant != null && loggedInTenant.equals(t)) {
                             loggedInTenant = null;
@@ -221,8 +216,7 @@ public class DormiesController {
         if (r != null && t != null) {
             new Thread(() -> {
                 try {
-                    ((TenantRepository) tenantRepo).assignRoom(t.getId(), r.getRoomNumber());
-                    ((RoomRepository) roomRepo).updateStatus(r.getRoomNumber(), "Occupied");
+                    facade.assignRoom(t, r);
                     Platform.runLater(() -> {
                         roomCombo.getSelectionModel().clearSelection();
                         staffTenantCombo.getSelectionModel().clearSelection();
@@ -244,7 +238,7 @@ public class DormiesController {
             MaintenanceRequest req = requests.get(selectedIndex);
             new Thread(() -> {
                 try {
-                    ((MaintenanceRequestRepository) requestRepo).updateStatus(req.getRequestId(), "Resolved");
+                    facade.resolveRequest(req.getRequestId());
                     Platform.runLater(() -> {
                         showPopup("Success", "Request resolved.");
                         refreshAllFromDB();
@@ -264,7 +258,7 @@ public class DormiesController {
             MaintenanceRequest req = requests.get(selectedIndex);
             new Thread(() -> {
                 try {
-                    requestRepo.delete(req.getRequestId());
+                    facade.deleteRequest(req.getRequestId());
                     Platform.runLater(() -> {
                         showPopup("Success", "Request deleted.");
                         refreshAllFromDB();
@@ -283,10 +277,9 @@ public class DormiesController {
         String desc = descInput.getText().trim();
         if (t != null && !desc.isEmpty()) {
             String reqId = "REQ-" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
-            String sql = "INSERT INTO maintenance_request (request_id, tenant_id, description, status) VALUES (?, ?, ?, 'Pending')";
             new Thread(() -> {
                 try {
-                    ((MaintenanceRequestRepository) requestRepo).addRequest(reqId, t.getId(), desc);
+                    facade.submitRequest(reqId, t.getId(), desc);
                     Platform.runLater(() -> {
                         descInput.clear();
                         showPopup("Success", "Request submitted. ID: " + reqId);
@@ -306,11 +299,15 @@ public class DormiesController {
         try {
             double amt = Double.parseDouble(amtInput.getText().trim());
             if (t != null && amt > 0) {
+                PaymentStrategy strategy = new CardPaymentStrategy();
+                String receiptMessage = strategy.processPayment(amt);
+
                 t.pay(amt);
                 Payment lastPayment = t.getPayments().get(t.getPayments().size() - 1);
                 payments.add(lastPayment);
                 amtInput.clear();
-                showPopup("Success", lastPayment.generateReceipt());
+                refreshTenantDetails(t);
+                showPopup("Success", receiptMessage);
             } else {
                 showPopup("Error", "Amount must be greater than zero.");
             }

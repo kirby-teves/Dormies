@@ -15,4 +15,6 @@ module com.example.dormies {
     opens com.example.dormies.Login to javafx.fxml;
     exports com.example.dormies.Repositories;
     opens com.example.dormies.Repositories to javafx.fxml;
+    exports com.example.dormies.model;
+    opens com.example.dormies.model to javafx.fxml;
 }

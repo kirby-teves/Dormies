@@ -4,16 +4,11 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="15" alignment="CENTER" prefWidth="400" prefHeight="450" stylesheets="@style.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Login.LoginController">
+<VBox spacing="15" alignment="CENTER" prefWidth="400" prefHeight="450" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.dormies.Login.LoginController">
     <padding>
         <Insets top="30" right="40" bottom="30" left="40"/>
     </padding>
     <children>
-        <HBox alignment="TOP_RIGHT">
-            <children>
-                <Button text="Dark Mode" onAction="#onDarkModeClicked" style="-fx-font-size: 11px;"/>
-            </children>
-        </HBox>
 
         <Label text="Dormies" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
         <Label text="Sign in to your account" style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;"/>

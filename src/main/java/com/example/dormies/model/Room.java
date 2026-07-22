@@ -1,4 +1,4 @@
-package com.example.dormies.Dormies;
+package com.example.dormies.model;
 
 public class Room implements java.io.Serializable {
     private String roomNumber;

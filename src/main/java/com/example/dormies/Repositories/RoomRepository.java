@@ -1,6 +1,8 @@
 package com.example.dormies.Repositories;
 
-import com.example.dormies.Dormies.*;
+import com.example.dormies.MySQLConnection;
+import com.example.dormies.model.Room;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

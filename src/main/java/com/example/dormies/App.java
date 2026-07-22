@@ -1,7 +1,8 @@
 package com.example.dormies;
 
-import com.example.dormies.Dormies.*;
-import com.example.dormies.Dormies.Person;
+import com.example.dormies.model.Admin;
+import com.example.dormies.model.Person;
+import com.example.dormies.model.SessionManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -17,8 +18,6 @@ public class App extends Application {
             String fxmlFile;
             if (sessionUser instanceof Admin) {
                 fxmlFile = "admin-view.fxml";
-            } else if (sessionUser instanceof Staff) {
-                fxmlFile = "staff-view.fxml";
             } else {
                 fxmlFile = "tenant-view.fxml";
             }
